@@ -33,7 +33,9 @@ parseLink =
 
 data Node = Node Name Weight deriving (Eq, Show, Ord)
 
-type Recipe = Map Name (Maybe Node)
+type NodeInfo = (Maybe Node, [Name]) -- (Maybe Self, Children)
+
+type Recipe = Map Name (Maybe Node, NodeInfo) -- (Maybe Parent, info)
 
 buildIndex :: [Link] -> Recipe
 buildIndex [] = M.empty
@@ -42,22 +44,37 @@ buildIndex ls = go M.empty ls
     go :: Recipe -> [Link] -> Recipe
     go m [] = m
     go m (Link name w children : rest) =
-      let m' = foldr (\child acc -> M.insert child (Just (Node name w)) acc) m children
-          m'' = M.insertWith (flip const) name Nothing m'
+      let m' = foldr (\child acc ->
+                        M.insertWith
+                          (\(parent, _) (_, oldinfo) -> (parent, oldinfo))
+                          child
+                          (Just (Node name w), (Nothing, []))
+                          acc) m children
+          m'' = M.insertWith
+                  (\(nparent, (nself, nchildren)) (oparent, (omself, ochildren)) -> (oparent, (nself, nchildren)))
+                  name
+                  (Nothing, (Just (Node name w), children))
+                  m'
       in go m'' rest
 
 data Tree = Tree Node [Node] deriving (Eq, Show)
 
-buildTree :: Recipe -> Tree
-buildTree recipe =
-  let [root] = M.toList $ M.filter isNothing recipe
-  in undefined
+findRoot :: Recipe -> Name
+findRoot recipe = fst . head . M.toList $ M.filter (isNothing . fst) recipe
+
+-- buildTree :: Recipe -> Tree
+-- buildTree recipe =
+--   let root = findRoot recipe
+--   in Tree root (go recipe root)
+--   where
+--     go :: Recipe -> Name -> Tree
+--     go = undefined
 
 main :: IO ()
 main = do
   contents <- TIO.readFile "input.txt"
   let Right parsed = parseOnly (many1 (parseLink <* endOfLine)) contents
       ind = buildIndex parsed
-      parentless = M.filter isNothing ind
+      parentless = findRoot ind
   print parentless
   pure ()
