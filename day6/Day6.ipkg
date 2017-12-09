@@ -1,0 +1,5 @@
+package Day6
+
+pkgs = contrib
+
+modules = Day6
