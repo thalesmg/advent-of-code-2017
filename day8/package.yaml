@@ -1,0 +1,10 @@
+library:
+  dependencies:
+    - base
+    - attoparsec
+    - text
+    - containers
+    - free
+  source-dirs: src
+name: day8
+ghc-options: -Wall
