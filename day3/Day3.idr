@@ -12,15 +12,6 @@ namespace Part1
                     then go num (x + 2)
                     else div (x - 1) 2
 
-  dist : Integer -> Integer
-  dist x = radius x + mod (x - (1 + radius x)) (1 + radius x)
-
-  boom : Integer -> Integer
-  boom x = mod (radius x - x) (2 * radius x)
-
-  odist : Integer -> Integer
-  odist x = mod (x - (1 + radius x)) (2 * radius x) + boom x
-
   plof : Integer -> Integer -> Integer
   plof y phase = let r = radius y
                      r' = 2 * r + 1
