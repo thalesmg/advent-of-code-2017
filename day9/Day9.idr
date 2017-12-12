@@ -38,15 +38,17 @@ record State where
   constructor MkState
   level : Nat
   score : Nat
+  cleaned : Nat
   garbage : Bool
 
 process : State -> List Char -> State
 process state [] = state
 process state ('!' :: _ :: xs) = process state xs
-process state@(MkState _ _ True) ('>' :: xs) =
+process state@(MkState _ _ _ True) ('>' :: xs) =
   process (record {garbage = False} state) xs
-process state@(MkState _ _ True) (_ :: xs) = process state xs
-process state@(MkState _ _ False) ('}' :: xs) =
+process state@(MkState _ _ _ True) (_ :: xs) =
+  process (record {cleaned $= (+1)} state) xs
+process state@(MkState _ _ _ False) ('}' :: xs) =
   process (record {level $= (\l => case l of
                                         S l => l
                                         Z => Z), score $= (+ (level state))} state) xs
@@ -59,5 +61,6 @@ main = do
   Right contents <- readFile "input.txt"
     | Left err => print err
   let list = unpack contents
-  let (MkState _ score _) = process (MkState Z Z False) list
-  print score
+  let (MkState _ score cleaned _) = process (MkState Z Z Z False) list
+  putStrLn $ show score
+  putStrLn $ show cleaned
