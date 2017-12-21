@@ -89,14 +89,25 @@ stepState max_depth state@(MkState pos fw tick sev) =
              fw' = stepFirewall fw
          in Right (MkState (S pos) fw' (S tick) sev')
 
-partial
 iteratePacket : (max_depth : Nat) -> State -> State
 iteratePacket max_depth state =
   case stepState max_depth state of
     (Left state) => state
-    (Right state) => iteratePacket max_depth state
+    (Right state') => assert_total (iteratePacket max_depth state')
 
-namespace Parte1
+applyNTimes : Nat -> (a -> a) -> a -> a
+applyNTimes Z     f a = a
+applyNTimes (S k) f a = applyNTimes k f (f a)
+
+partial
+iteratePacket' : (max_depth : Nat) -> State -> Nat -> Nat
+iteratePacket' max_depth state delay =
+  let fw' = applyNTimes delay stepFirewall (firewall state)
+  in case severity (iteratePacket max_depth (record {firewall = fw'} state)) of
+       Z => delay
+       _ => iteratePacket' max_depth state (S delay)
+
+namespace Main
   partial
   main : IO ()
   main = do
@@ -110,5 +121,7 @@ namespace Parte1
         let state = MkState Z firewall Z Z
         let max_depth = findMaxDepth firewall
         let (MkState _ _ _ sev) = iteratePacket max_depth state
+        let delay = iteratePacket' max_depth state Z
         printLn sev
+        printLn delay
         pure ()
