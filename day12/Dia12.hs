@@ -80,4 +80,5 @@ main = do
       uf = foldl union uf0 contents
   print uf
   print $ maybe 0 S.size (M.lookup 0 (components uf))
+  print $ length $ M.keys (components uf)
   pure ()
