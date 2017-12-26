@@ -88,7 +88,26 @@ fn read_contents() -> String {
     contents
 }
 
-pub fn hash(contents: String) -> String {
+#[derive(Debug)]
+pub struct Hashe {
+    pub value: Vec<usize>,
+}
+
+impl Hashe {
+    pub fn new() -> Hashe {
+        Hashe{value: vec![]}
+    }
+
+    pub fn to_hex(&self) -> String {
+        let mut output = String::new();
+        for i in &self.value {
+            output += &format!("{:x}", i);
+        }
+        output
+    }
+}
+
+pub fn hash(contents: &String) -> Hashe {
     let mut lens: Vec<usize> = vec![17, 31, 73, 47, 23];
     let mut input = contents
         .trim()
@@ -115,16 +134,16 @@ pub fn hash(contents: String) -> String {
         }
     }
 
-    let mut output = String::new();
+    let mut tmp = vec![];
     for i in 0..16 {
         let mut digit = 0;
         for j in (i * 16)..(i * 16 + 16) {
             digit ^= ribbon[&j];
         }
         // output.push_str(format!("{:x}", digit));
-        output += &format!("{:x}", digit)
+        tmp.push(digit);
     }
-    output
+    Hashe{value: tmp}
 }
 
 fn part2(contents: String) {
