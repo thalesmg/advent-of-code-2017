@@ -1,0 +1,10 @@
+[package]
+name = "dia14"
+version = "0.1.0"
+authors = ["Thales Macedo Garitezi <thalesmg@gmail.com>"]
+
+[dependencies]
+ordermap = "0.3.2"
+
+[[bin]]
+name = "dia14"
