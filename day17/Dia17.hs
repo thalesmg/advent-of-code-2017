@@ -25,17 +25,17 @@ solution1 =
   in
     S.findIndexR (== 2017) final
 
-solution2 :: Int
-solution2 = go 50000000 (1, 0, 0)
+solution2 :: Int -> Int
+solution2 n = go n (1, 0, 0)
   where
     go :: Int -> (Int, Int, Int) -> Int
     go 0 (_, _, acc) = acc
     go n (size, pos, acc) =
       let
         nextIndex = 1 + mod (pos + inputSteps) size
-        state' = (succ size, nextIndex, if nextIndex == 1 then size else acc)
+        state' = (size + 1, seq nextIndex nextIndex, if nextIndex == 1 then size else acc)
       in
-        seq state' (go (pred n) state')
+        seq state' (go (n - 1) state')
 
 -- import qualified Data.IntMap as M
 -- import Data.IntMap (IntMap, (!))
@@ -59,4 +59,4 @@ solution2 = go 50000000 (1, 0, 0)
 -- spin' = spin 3
 
 main :: IO ()
-main = print solution2
+main = print $ solution2 50000000
