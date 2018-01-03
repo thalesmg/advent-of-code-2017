@@ -1,0 +1,22 @@
+name:                dia18
+version:             0.1.0.0
+github:              "githubuser/dia18"
+license:             BSD3
+author:              "Author name here"
+maintainer:          "example@example.com"
+copyright:           "2017 Author name here"
+
+executables:
+  dia18:
+    source-dirs: .
+    main: Dia18.hs
+    dependencies:
+      - base
+      - dia18
+
+library:
+  source-dirs: .
+  dependencies:
+    - base
+    - containers
+    - free
