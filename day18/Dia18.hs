@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Main where
+module Dia18parte1 where
 
 import Data.Char (isAlpha)
 import Data.List (stripPrefix)
@@ -59,7 +59,7 @@ execute1 (Running (prog@(_, inst, _), processor, msound)) =
     Mul reg val ->
       Running (move 1 prog, put processor reg (deref processor val * get processor reg), msound)
     Mod reg val ->
-      Running (move 1 prog, put processor reg (deref processor val `mod` get processor reg), msound)
+      Running (move 1 prog, put processor reg (get processor reg `mod` deref processor val), msound)
     Rcv reg ->
       if get processor reg /= 0
       then case msound of
@@ -70,7 +70,7 @@ execute1 (Running (prog@(_, inst, _), processor, msound)) =
       let
         reg_val = get processor reg
       in
-        if reg_val > 0
+        if reg_val > 0 && deref processor val /=0
         then Running (move (deref processor val) prog, processor, msound)
         else Running (move 1 prog, processor, msound)
 execute1 (Finished x) = Finished x
@@ -101,6 +101,13 @@ main = do
   instructions@(inst : rest) <- fmap parse1 . lines <$> readFile "input.txt"
   let initial = Running (([], inst, rest), M.empty, Nothing)
       result1 = execute initial
-  print initial
+      kabum state =
+        case execute1 state of
+          state'@(Running _) -> print state' >> print "" >> kabum state'
+          Finished x -> return x
+  -- result1' <- kabum initial
+  -- print initial
   print result1
+  print ""
+  -- print result1'
   pure ()
