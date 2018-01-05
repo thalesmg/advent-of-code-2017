@@ -1,7 +1,9 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE Strict #-}
 
-module Dia18parte1 where
+module Dia18 where
 
 import Data.Char (isAlpha)
 import Data.List (stripPrefix)
@@ -21,7 +23,7 @@ data Instruction where
   Mul :: Register -> Value -> Instruction
   Mod :: Register -> Value -> Instruction
   Rcv :: Register -> Instruction
-  Jgz :: Register -> Value -> Instruction
+  Jgz :: Value -> Value -> Instruction
   deriving (Eq, Show)
 
 type Zipper a = ([a], a, [a])
@@ -35,17 +37,29 @@ get :: Processor -> Register -> Int
 get processor reg = M.findWithDefault 0 reg processor
 
 put :: Processor -> Register -> Int -> Processor
-put processor reg x = M.insert reg x processor
+put processor reg !x = M.insert reg x processor
 
 deref :: Processor -> Value -> Int
 deref _ (Primitive x) = x
 deref processor (Pointer reg) = get processor reg
 
 move :: Int -> Zipper a -> Zipper a
-move n prog@(prev, inst, next)
+move !n prog@(!prev, !inst, !next)
   | n == 0    = prog
   | n >  0    = move (n - 1) (inst : prev, head next, tail next) -- (take (n - 1) next ++ inst : prev, next !! (n - 1), drop n next)
   | otherwise = move (n + 1) (tail prev, head prev, inst : next) -- (drop n' prev, prev !! (n' - 1), take n' prev ++ inst : next)
+
+move' :: Int -> Zipper a -> Maybe (Zipper a)
+move' !n prog@(!prev, !inst, !next)
+  | n == 0    = Just prog
+  | n >  0    =
+    case next of
+      [] -> Nothing
+      (i:next) -> move' (n - 1) (inst : prev, i, next)
+  | otherwise =
+    case prev of
+      [] -> Nothing
+      (i:prev) -> move' (n + 1) (prev, i, inst : next)
 
 execute1 :: State -> State
 execute1 (Running (prog@(_, inst, _), processor, msound)) =
@@ -68,7 +82,7 @@ execute1 (Running (prog@(_, inst, _), processor, msound)) =
       else Running (move 1 prog, processor, msound)
     Jgz reg val ->
       let
-        reg_val = get processor reg
+        reg_val = deref processor reg
       in
         if reg_val > 0 && deref processor val /=0
         then Running (move (deref processor val) prog, processor, msound)
@@ -94,7 +108,7 @@ parse1 (stripPrefix "set " -> Just (words -> [[reg], raw])) = Set (Register reg)
 parse1 (stripPrefix "add " -> Just (words -> [[reg], raw])) = Add (Register reg) (parseVal raw)
 parse1 (stripPrefix "mul " -> Just (words -> [[reg], raw])) = Mul (Register reg) (parseVal raw)
 parse1 (stripPrefix "mod " -> Just (words -> [[reg], raw])) = Mod (Register reg) (parseVal raw)
-parse1 (stripPrefix "jgz " -> Just (words -> [[reg], raw])) = Jgz (Register reg) (parseVal raw)
+parse1 (stripPrefix "jgz " -> Just (words -> [reg_or_val, raw])) = Jgz (parseVal reg_or_val) (parseVal raw)
 
 main :: IO ()
 main = do
