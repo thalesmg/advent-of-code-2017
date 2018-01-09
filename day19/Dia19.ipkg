@@ -1,0 +1,5 @@
+package Dia19
+
+pkgs = contrib
+
+modules = Dia19
