@@ -84,6 +84,7 @@ record State where
   coord : Coord
   dir : Direction
   letters : List Char
+  steps : Int
 
 data Walker = Walking State
             | Finished State
@@ -126,9 +127,9 @@ stepMaze tubes (Walking state) =
       case current of
         Cross => case nextInCross tubes (coord state) (dir state) of
                    Nothing => Failed state
-                   (Just (dir', next')) => Walking (record {coord = next', dir = dir'} state)
-        (Lette l) => Walking (record {coord = nextCoord (coord state) (dir state), letters $= (l::)} state)
-        _ => Walking (record {coord = nextCoord (coord state) (dir state)} state)
+                   (Just (dir', next')) => Walking (record {coord = next', dir = dir', steps $= (+1)} state)
+        (Lette l) => Walking (record {coord = nextCoord (coord state) (dir state), letters $= (l::), steps $= (+1)} state)
+        _ => Walking (record {coord = nextCoord (coord state) (dir state), steps $= (+1)} state)
 stepMaze _ walker = walker
 
 partial
@@ -147,8 +148,9 @@ namespace Parte1
     let entrance = findEntrance tubes
     case entrance of
       Just entrance => do
-        let final = walkMaze tubes (Walking (MkState entrance Down []))
-        print . pack . reverse . letters $ final
+        let final = walkMaze tubes (Walking (MkState entrance Down [] 0))
+        printLn . pack . reverse . letters $ final
+        printLn . steps $ final
       Nothing => print "Não achei a entrada!!!!!!!!"
 
 namespace Main
