@@ -1,0 +1,6 @@
+library:
+  dependencies:
+    - base
+    - split
+    - hmatrix
+  source-dirs: .
