@@ -3,4 +3,6 @@ library:
     - base
     - split
     - hmatrix
+    - containers
+    - aeson
   source-dirs: .

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a6257389b0afdbd2b0838c951dad530c337380f3f2f85132c28730caca98414b
+-- hash: e5c921fed9876c4f17b933501710e9ddabc5cc6c940d12a368556a02333392e1
 
 name:           day20
 version:        0.0.0
@@ -12,12 +12,15 @@ cabal-version:  >= 1.10
 library
   exposed-modules:
       Dia20
+      Dia20sim
   other-modules:
       Paths_day20
   hs-source-dirs:
       ./.
   build-depends:
-      base
+      aeson
+    , base
+    , containers
     , hmatrix
     , split
   default-language: Haskell2010

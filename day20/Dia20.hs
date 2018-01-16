@@ -5,6 +5,9 @@ module Dia20 where
 
 import Data.List (stripPrefix, minimumBy, nubBy, sortOn)
 import Data.List.Split (splitOn)
+import qualified Data.Set as S
+import qualified Data.Map as M
+import Data.Aeson
 import Data.Function (on)
 import Data.Maybe (catMaybes, maybeToList, listToMaybe, isJust)
 import Control.Monad (join)
@@ -20,7 +23,7 @@ data Particle = Particle { ind :: Int
                          , vel :: Point
                          , ace :: Point
                          }
-                deriving (Eq, Show)
+                deriving (Eq, Show, Ord)
 
 parsePoint :: String -> Maybe Point
 parsePoint (stripPrefix "=<" . tail -> Just (stripPrefix ">" . reverse -> Just (splitOn "," . reverse -> [x, y, z]))) = Just (read x, read y, read z)
@@ -223,6 +226,25 @@ answer2' particles = go particles
           [] -> p : go ps
           _ -> go next
 
+allCols :: S.Set Particle -> M.Map Double (S.Set Int)
+allCols ps = foldr (\p acc -> M.union (updateP p) acc) M.empty ps
+  where
+    updateP p = foldr (\p' acc -> case collisionTimes p p' of
+                         [] -> acc
+                         ts -> foldr (\t acc' -> M.insertWith S.union t (S.fromList [ind p', ind p]) acc') acc ts)
+                   M.empty
+                   (S.delete p ps)
+
+answer2'' m ps
+  | M.null m  = ps
+  | otherwise =
+    let
+      ((t, inds), m') = M.deleteFindMin m
+      m'' = M.filter (\s -> S.size s > 2) $ M.map (\s -> S.difference s inds) $ m'
+      ps' = S.difference ps inds
+    in
+      -- traceShow (encode m'')
+        (answer2'' m'' ps')
 
 main :: IO ()
 main = do
@@ -232,8 +254,13 @@ main = do
       numPs = length particles
       -- matrix = ((numPs >< 9) (fmap fromIntegral $ concat $ fmap pToList particles)) :: Matrix Double
       -- survivors = nubBy hasCollision particles
-      survivors = answer2' particles
+      sps = S.fromList particles
+      sinds = S.map ind sps
+      colsMap = (allCols sps)
+      survivors = answer2'' (M.filterWithKey (\t _ -> isInteger t) colsMap) sinds
   print answer1
+  -- print (encode colsMap)
   -- print (rank matrix)
+  print (M.keys colsMap)
   print (length survivors)
   pure ()
